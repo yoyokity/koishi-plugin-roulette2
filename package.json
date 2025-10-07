@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-roulette2",
   "description": "用于qq群的俄罗斯轮盘禁言",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "author": "yoyokity",
