@@ -52,7 +52,7 @@ let status: Status | null = null
 export function apply(ctx: Context, config: Config) {
   ctx.intersect(session => session.guildId !== undefined)
     .command('开枪', '对自己开一枪，看看会不会死哦')
-    .action(({ session }) => {
+    .action(async ({ session }) => {
       //初始化
       if ( status === null ) {
         status = new Status(config)
@@ -60,9 +60,11 @@ export function apply(ctx: Context, config: Config) {
 
       if ( getRandomBoolean(config.probability) ) {
         //被禁言
-        session.bot.muteGuildMember(session.guildId, session.userId, status.time * 1000, `嘻嘻嘻，${segment.at(session.userId!)} 被杀死了！`)
+        await session.bot.muteGuildMember(session.guildId, session.userId, status.time * 1000)
 
+        session.send(`嘻嘻嘻，${segment.at(session.userId!)} 被杀死了！`)
         status = null
+
         return '撒，让我们来开始新一轮的游戏吧。（上弹中）'
       }
       else {
