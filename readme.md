@@ -1,5 +1,3 @@
-# koishi-plugin-roulette
-
 用于qq群的俄罗斯轮盘禁言（返璞归真，不添加任何花里胡哨的东西）
 
 
