@@ -1,4 +1,4 @@
-import { Context, Schema, segment } from 'koishi'
+import { Context, Schema, segment, Random } from 'koishi'
 
 export const name = 'roulette'
 export const usage = `开枪后，随机概率对其禁言
@@ -7,27 +7,34 @@ export const usage = `开枪后，随机概率对其禁言
 export interface Config {
   probability?: number
   initTime?: number
-  timeStep?: number
+  timeStepMin?: number
+  timeStepMax?: number
 }
 
 export const Config: Schema<Config> = Schema.object({
   probability: Schema.number()
     .min(0).max(1).step(0.05)
     .default(0.2)
-    .role('slider')
+    .role('')
     .description('被禁言的概率，0-1'),
 
   initTime: Schema.number()
     .min(30).max(300).step(10)
     .default(30)
-    .role('slider')
+    .role('')
     .description('初始禁言时间（秒）'),
 
-  timeStep: Schema.number()
+  timeStepMin: Schema.number()
     .min(0).max(120).step(5)
-    .default(30)
-    .role('slider')
-    .description('每次空枪后叠加的禁言时间（秒）')
+    .default(15)
+    .role('')
+    .description('每次空枪后叠加的随机最小禁言时间（秒）'),
+
+  timeStepMax: Schema.number()
+    .min(0).max(120).step(5)
+    .default(120)
+    .role('')
+    .description('每次空枪后叠加的随机最大禁言时间（秒）')
 })
 
 class Status {
@@ -43,44 +50,45 @@ class Status {
   }
 
   add() {
-    this.time = this.time + this.config.timeStep
+    this.time = this.time + Random.int(this.config.timeStepMin, this.config.timeStepMax)
   }
 }
 
 let status: Status | null = null
+
+function formatTime(seconds: number): string {
+  if (seconds < 60) {
+    return `${seconds.toString().padStart(2, '0')} 秒`
+  }
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${minutes.toString().padStart(2, '0')} 分 ${remainingSeconds.toString().padStart(2, '0')} 秒`
+}
 
 export function apply(ctx: Context, config: Config) {
   ctx.intersect(session => session.guildId !== undefined)
     .command('开枪', '对自己开一枪，看看会不会死哦')
     .action(async ({ session }) => {
       //初始化
-      if ( status === null ) {
+      if (status === null) {
         status = new Status(config)
       }
 
-      if ( getRandomBoolean(config.probability) ) {
+      if (Random.bool(config.probability)) {
         //被禁言
         await session.bot.muteGuildMember(session.guildId, session.userId, status.time * 1000)
-        await session.send(`嘻嘻嘻，${segment.at(session.userId!)} 被杀死了！`)
+
+        await session.sendQueued(`${segment.at(session.userId!)} 被杀死了！`, 500)
+        await session.sendQueued('撒，让我们来开始新一轮的游戏吧。（上弹中）', 500)
 
         status = null
-
-        return '撒，让我们来开始新一轮的游戏吧。（上弹中）'
+        return
       }
       else {
         //空枪
         status.add()
 
-        return `${segment.at(session.userId!)} 这枪空了，恭喜你躲过一劫！\n禁言时间将增加到 ${status.time} 秒！`
+        return `${segment.at(session.userId!)} 这枪空了，恭喜你躲过一劫！\n禁言时间将增加到 ${formatTime(status.time)}！`
       }
     })
-}
-
-/**
- * 根据给定的概率（0到1之间）返回布尔值。
- * @param probability 概率值 (0.2 表示 20% 的几率为 true)
- * @returns 达到概率时返回 true，否则返回 false
- */
-function getRandomBoolean(probability: number): boolean {
-  return Math.random() <= probability
 }

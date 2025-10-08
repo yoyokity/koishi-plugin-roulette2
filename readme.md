@@ -1,5 +1,24 @@
 # koishi-plugin-roulette
 
-[![npm](https://img.shields.io/npm/v/koishi-plugin-roulette?style=flat-square)](https://www.npmjs.com/package/koishi-plugin-roulette)
+用于qq群的俄罗斯轮盘禁言（返璞归真，不添加任何花里胡哨的东西）
 
 
+
+## 玩法
+
+开枪后，随机概率对其禁言 如果没禁言则增加下一次禁言的时间
+
+
+
+## 指令
+
+- 开枪
+
+
+
+## 配置选项
+
+- 被禁言的概率
+- 初始禁言时间（秒）
+- 每次空枪后叠加的随机最小禁言时间（秒）
+- 每次空枪后叠加的随机最大禁言时间（秒）
