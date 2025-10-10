@@ -60,9 +60,15 @@ function formatTime(seconds: number): string {
   if (seconds < 60) {
     return `${seconds.toString().padStart(2, '0')} 秒`
   }
-  const minutes = Math.floor(seconds / 60)
+  if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes.toString().padStart(2, '0')} 分 ${remainingSeconds.toString().padStart(2, '0')} 秒`
+  }
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
   const remainingSeconds = seconds % 60
-  return `${minutes.toString().padStart(2, '0')} 分 ${remainingSeconds.toString().padStart(2, '0')} 秒`
+  return `${hours.toString().padStart(2, '0')} 小时 ${minutes.toString().padStart(2, '0')} 分 ${remainingSeconds.toString().padStart(2, '0')} 秒`
 }
 
 export function apply(ctx: Context, config: Config) {
@@ -90,5 +96,13 @@ export function apply(ctx: Context, config: Config) {
 
         return `${segment.at(session.userId!)} 这枪空了，恭喜你躲过一劫！\n禁言时间将增加到 ${formatTime(status.time)}！`
       }
+    })
+
+  ctx.intersect(session => session.guildId !== undefined)
+    .command('睡觉', '来一次精致6-8小时睡眠吧！')
+    .action(async ({ session }) => {
+      const time = Random.int(6 * 60 * 60, 8 * 60 * 60) * 1000
+      await session.bot.muteGuildMember(session.guildId, session.userId, time)
+      return `${segment.at(session.userId!)} 好好睡觉，${formatTime(time / 1000)} 后再醒来吧！`
     })
 }
